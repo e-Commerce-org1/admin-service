@@ -1,36 +1,23 @@
-// import { Module } from '@nestjs/common';
-// import { ConfigModule, ConfigService } from '@nestjs/config';
-// import { MongooseModule } from '@nestjs/mongoose';
-// import { userController } from './users/user.controller';
-// import { UserModule } from './users/user.module';
-
-
-// @Module({
-//   imports: [
-//     ConfigModule.forRoot({
-//       isGlobal: true,
-//       envFilePath: ['.env'],
-//     }),
-//     MongooseModule.forRootAsync({
-//       imports: [ConfigModule],
-//       useFactory: (ConfigService: ConfigService) => ({
-//         uri: ConfigService.get('DB_URI'),
-//       }),
-//       inject: [ConfigService],
-//     }),
-//     UserModule
-//   ],
-//   controllers: [],
-//   providers: [],
-// })
-// export class AppModule {}
-
 
 import { Module } from '@nestjs/common';
-import { UserModule } from './users/user.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { AdminModule } from'./admin-auth/admin.module';
+import { RedisService } from './redis/redis.service'; 
+ import { AuthGrpcClientModule } from './admin-auth/grpc/authgrpc/auth.module';
+import { ConfigModule } from '@nestjs/config';
 
 
 @Module({
-  imports: [UserModule],
+  imports: [
+
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ['.env']
+    }),
+    MongooseModule.forRoot(process.env.MONGO_URI as string),
+    AdminModule
+  ],
+
+  providers: [AuthGrpcClientModule],
 })
 export class AppModule {}
