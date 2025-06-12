@@ -1,10 +1,9 @@
-export interface UserData {
-  id: string;
-  email: string;
-  name: string;
-  phone: string;
-  status: string;
-  role: string;
+export interface IUserAdminGrpcService {
+  getAllUsers(request: GetAllUsersRequest): Promise<GetAllUsersResponse>;
+  getUserById(request: GetUserByIdRequest): Promise<GetUserByIdResponse>;
+  updateUserStatus(request: UpdateUserStatusRequest): Promise<UpdateUserStatusResponse>;
+  unblockUser(request: UnblockUserRequest): Promise<UnblockUserResponse>;
+  searchUsers(request: SearchUsersRequest): Promise<SearchUsersResponse>;
 }
 
 export interface GetAllUsersRequest {
@@ -34,29 +33,25 @@ export interface GetUserByIdResponse {
 
 export interface UpdateUserStatusRequest {
   userId: string;
-  status: string;
-  reason: string;
 }
 
 export interface UpdateUserStatusResponse {
   success: boolean;
   message: string;
-  user: UserData;
 }
 
-export interface DeleteUserRequest {
+export interface UnblockUserRequest {
   userId: string;
-  reason: string;
 }
 
-export interface DeleteUserResponse {
+export interface UnblockUserResponse {
   success: boolean;
   message: string;
 }
 
 export interface SearchUsersRequest {
   query: string;
-  searchBy: string;
+  status: string;
   limit: number;
 }
 
@@ -66,10 +61,11 @@ export interface SearchUsersResponse {
   success: boolean;
 }
 
-export interface IUserAdminGrpcService {
-  getAllUsers(data: GetAllUsersRequest): Promise<GetAllUsersResponse>;
-  getUserById(data: GetUserByIdRequest): Promise<GetUserByIdResponse>;
-  updateUserStatus(data: UpdateUserStatusRequest): Promise<UpdateUserStatusResponse>;
-  // deleteUser(data: DeleteUserRequest): Promise<DeleteUserResponse>;
-  searchUsers(data: SearchUsersRequest): Promise<SearchUsersResponse>;
+export interface UserData {
+  id: string;
+  email: string;
+  name: string;
+  phone: string;
+  status: string;
+  role: string;
 }

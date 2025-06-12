@@ -10,6 +10,7 @@ export class AuthGuard implements CanActivate {
   constructor(private adminService: AdminService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    
     const request = context.switchToHttp().getRequest<Request>();
     const token = this.extractTokenFromHeader(request);
     
@@ -19,6 +20,7 @@ export class AuthGuard implements CanActivate {
 
     try {
       const { isValid } = await this.adminService.validateToken(token);
+      
       return isValid; 
     } catch (error) {
       throw new UnauthorizedException('Invalid token');

@@ -2,20 +2,13 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { add } from 'winston';  
-// import {winstonModule} from 'nest-winston';
+import {WinstonModule} from 'nest-winston';
+import { getWinstonConfig } from './config/logger.config';
 
 async function bootstrap() {
   
   const app = await NestFactory.create(AppModule);
-  // const loggerProvider = createLoggerProvider('Main');
-  // const winstonInstance = loggerProvider.useFactory();
-
-  // // Create app with Winston as the logger
-  // const app = await NestFactory.create(AppModule, {
-  //   logger: WinstonModule.createLogger({
-  //     instance: winstonInstance
-  //   })
-  // });
+  logger:WinstonModule.createLogger(getWinstonConfig('Main'));
 
   const config = new DocumentBuilder()
     .setTitle('Admin Authentication API')
@@ -42,6 +35,6 @@ async function bootstrap() {
   });
 
   
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 3002);
 }
 bootstrap();

@@ -8,7 +8,7 @@ export const hashPassword = async (password: string): Promise<string> => {
 
 export const verifyPassword = async (
   plainPassword: string, adminpassword : string
-  // hashedPassword: string,
+
 ): Promise<boolean> => {
   return bcrypt.compare(plainPassword, adminpassword);
 };

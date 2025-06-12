@@ -11,17 +11,15 @@ import { RedisModule } from '../../providers /redis/redis.module';
 import config from '../../config/jwt.config';
 import { AuthGrpcClientModule } from '../../grpc/authgrpc/auth.module';
 import { AuthGuard } from 'src/guards/auth.guard';
+import { LoggerModule } from 'src/utils/logger/logger.module';
 // import { AuthGuard } from './guards/auth.guard';
 
 @Module({
   imports: [
-    // PassportModule.register({ defaultStrategy: 'jwt' }),
-    // JwtModule.registerAsync({
-    //   useFactory: () => ({
-    //     secret: config().jwtSecret,
-    //     signOptions: { expiresIn: config().jwtExpiresIn }
-    //   })
-    // }),
+  JwtModule.register({
+      secret: process.env.JWT_SECRET || 'your-secret-key', 
+      signOptions: { expiresIn: '15m' },
+    }),
     ConfigModule.forRoot(),
     MongooseModule.forFeature([{ 
       name: Admin.name, 
@@ -29,6 +27,8 @@ import { AuthGuard } from 'src/guards/auth.guard';
     }]),
     AuthGrpcClientModule,
     RedisModule,
+    LoggerModule.forFeature('AdminService'),
+    LoggerModule.forFeature('AdminController'),
 
   ],
   controllers: [AdminController],

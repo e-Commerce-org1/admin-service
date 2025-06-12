@@ -15,13 +15,13 @@ import { UpdateProductDto } from './dto/updateproduct.dto';
 
   import { Logger } from 'winston';
 import { ProductServiceGrpc } from '../../interfaces/productinterface';
-import { GrpcClientService } from '../../grpc/authgrpc/auth.grpc-client';
+
 
   
   @Injectable()
   export class ProductService {
 	private productService: ProductServiceGrpc;
-  private readonly grpcClientService: GrpcClientService
+
    
   
 	constructor(
@@ -44,7 +44,8 @@ import { GrpcClientService } from '../../grpc/authgrpc/auth.grpc-client';
     const payload: CreateProductRequest = {
       name: dto.name,
       category: dto.category,
-      subCategory: dto.subCategory || undefined, 
+      subCategory: dto.subCategory || undefined,
+      gender: dto.gender || undefined, 
       brand: dto.brand,
       imageUrl: dto.imageUrl,
       description: dto.description,
@@ -56,7 +57,7 @@ import { GrpcClientService } from '../../grpc/authgrpc/auth.grpc-client';
         stock: variant.stock
       }))
     };
- console.log("passing paylload ");
+ 
 
     const grpcResponse = await lastValueFrom(this.productService.CreateProduct(payload));
     
@@ -125,17 +126,6 @@ async listProducts(filter: ProductFilter): Promise<Response> {
     //   this.logger.error('UpdateInventory Error', { error });
       throw new InternalServerErrorException('Failed to update inventory');
     }
-  }
-
-  async validateToken(accessToken: string) {
-    const result = await this.grpcClientService.validateToken({
-      accessToken
-    });
-    
-    return {
-      isValid: result.isValid,
-      admin : result.entityId,
-    };
   }
 
   

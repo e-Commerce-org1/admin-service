@@ -26,6 +26,9 @@ export class CreateProductDto {
   @IsString()
   @IsOptional()
   subCategory: string;
+  @IsString()
+  @IsOptional()
+  gender: string;
 
   @IsString()
   brand: string;

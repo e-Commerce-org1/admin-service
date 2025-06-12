@@ -1,17 +1,15 @@
 
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { AdminModule } from'./admin-auth/admin.module';
-import { RedisService } from './redis/redis.service'; 
- import { AuthGrpcClientModule } from './admin-auth/grpc/authgrpc/auth.module';
+import { AdminModule } from'./modules/admin-auth/admin.module';
+import { RedisService } from './providers /redis/redis.service'; 
+ import { AuthGrpcClientModule } from './grpc/authgrpc/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { ProductModule } from './modules/admin-product/product.module';
 import { ProductGrpcClientModule } from './grpc/productgrpc/productgrpc.module';
-// import { ProductModule } from './admin-product/product.module';
-// import { ProductGrpcClientModule } from './admin-product/productgrpc/productgrpc.module';
-//  import { ProductGrpcClientModule } from './admin-product/productgrpc/productgrpc.module';
-//  import { ProductModule } from './admin-product/product.module';
-// import { ProductModule } from './admin-product/product.module';
+import { UserModule } from './modules/users/user.module';
+import { getWinstonConfig } from './config/logger.config';
+import { WinstonModule } from 'nest-winston';
 
 @Module({
   imports: [
@@ -21,12 +19,11 @@ import { ProductGrpcClientModule } from './grpc/productgrpc/productgrpc.module';
       envFilePath: ['.env']
     }),
     MongooseModule.forRoot(process.env.MONGO_URI as string),
-    AdminModule
+    AdminModule , ProductModule,UserModule,
+    WinstonModule.forRoot(getWinstonConfig('App')),
   ],
 
-  providers: [AuthGrpcClientModule,
-    AdminModule, ProductModule,ProductGrpcClientModule
-  ],
+
 
 })
 export class AppModule {}

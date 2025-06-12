@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { join } from 'path';
 //import { useradmin } from '../user.proto';
-import { UserAdminGrpcService } from './grpc.service';
+import { UserAdminGrpcService } from '../../modules/users/grpc.service';
 
 
 @Module({
@@ -14,7 +14,7 @@ import { UserAdminGrpcService } from './grpc.service';
         options: {
           url: '172.50.3.140:5051',
           package: 'useradmin',
-          protoPath: join(__dirname, '../user.proto'),
+          protoPath: join(__dirname, './user.proto'),
         },
       },
     ]),

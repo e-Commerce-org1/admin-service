@@ -10,6 +10,7 @@ export interface CreateProductRequest {
   name: string;
   category: string;
   subCategory?: string;
+  gender?: string;
   brand: string;
   imageUrl: string;
   description: string;

@@ -37,7 +37,7 @@ export class RedisService implements OnModuleInit , OnModuleDestroy {
     }
   }
   async setOtp(email: string, otp: string): Promise<boolean> 
-  {console.log("being called");
+  {
 
     try {
       const ttl = parseInt(this.configService.get('REDIS_TTL') || '600');
@@ -51,9 +51,6 @@ export class RedisService implements OnModuleInit , OnModuleDestroy {
       this.logger.error(`Error setting OTP for ${email}`, error.stack);
       return false;
     }
-    // const ttl = parseInt(this.configService.get('REDIS_TTL') || '600');
-    // await this.client.set(email, otp, {
-    //   EX: ttl,
   
   }
 

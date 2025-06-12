@@ -13,7 +13,7 @@ import { join } from 'path';
         options: {
           package: 'auth',
           protoPath: join(__dirname, 'auth.proto'),
-          url: '172.50.3.60:5051',
+          url: '172.50.3.60:5052',
         },
       },
     ]),

@@ -20,7 +20,7 @@ import { generateOtp } from './otp-generator';
 
     });
 
-      console.log("email is being initiated");
+    
     await transporter.sendMail({
        
       from: process.env.SMTP_USER || 'mahi.rajput@appinventiv.com', 
@@ -29,7 +29,7 @@ import { generateOtp } from './otp-generator';
       text: `Your OTP code is ${generateOtp}. It is valid for 10 minutes.`,
 
     });
-      console.log("email is beingsent ");
+     
    
   }
  

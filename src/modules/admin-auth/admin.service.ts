@@ -10,309 +10,296 @@ import { SignupAdminDto } from './dto/signup-admin.dto';
 import { LoginAdminDto } from './dto/login-admin.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-// import { UploadProfileDto } from './dto/upload-profile.dto';
+
 import { GrpcClientService } from '../../grpc/authgrpc/auth.grpc-client';
-import { RedisService } from 'src/providers /redis/redis.service';
+import { RedisService } from '../../providers /redis/redis.service';
 import {  hashPassword, verifyPassword } from 'src/utils/password-utils'; 
-// import * as AWS from 'aws-sdk'; 
+ 
 import { sendOtp } from '../../providers /email /email.service';
 import { generateOtp } from 'src/utils/otp-generator';
 import { ChangePasswordDto } from './dto/changepassword.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { AccessTokenResponse } from '../../interfaces/auth.interface';
-import { LogoutDto } from './dto/logout.dto';
-// import * as path from 'path'; 
-// import { LoginResponseDto } from './dto/login-response.dto';
+import * as winston from 'winston';
+import { InjectLogger } from 'src/utils/logger/logger.provider';
+import { JwtService } from '@nestjs/jwt';
+
 @Injectable()
 export class AdminService {     
   constructor(
     @InjectModel(Admin.name) private readonly adminModel: Model<AdminDocument>,
     private readonly grpcClientService: GrpcClientService, 
-    private readonly redisService: RedisService, 
+    private readonly redisService: RedisService,
+    private readonly jwtService: JwtService,
+    @InjectLogger('AdminService') private readonly logger: winston.Logger,
   ) {}
 
-
-  
-async signup(signupAdminDto: SignupAdminDto) {
+  async signup(signupAdminDto: SignupAdminDto) {
+    this.logger.info('Admin signup attempt', { email: signupAdminDto.email });
+    
     const { email, password, deviceId } = signupAdminDto;
 
-    const existingAdminCount = await this.adminModel.countDocuments();
-    if (existingAdminCount > 1) {
-      throw new ConflictException('Admin already exists. Only one admin is allowed.');
-    }
-    
-    const existingAdmin = await this.adminModel.findOne({ email });
-    if (existingAdmin) {
-      throw new ConflictException('Admin with this email already exists');
-    }
-  
-    const hashedPassword = await hashPassword(password);
-    const newAdmin = new this.adminModel({
-      email,
-      password: hashedPassword,
-      role: 'admin'
-    });
-    
-    const savedAdmin= await newAdmin.save();
-
- 
-   
-    //  const uniqueUserId = savedAdmin._id.toString();
-
-
-  
-
-    return  {
-      admin: {
-         entityId: savedAdmin._id,
-         email: savedAdmin.email,
-        deviceId: deviceId,
-        role: 'admin',
-        // userId: uniqueUserId 
+    try {
+      const existingAdminCount = await this.adminModel.countDocuments();
+      if (existingAdminCount > 1) {
+        this.logger.warn('Admin creation blocked - already exists');
+        throw new ConflictException('Admin already exists. Only one admin is allowed.');
+      }
       
-    
+      const existingAdmin = await this.adminModel.findOne({ email });
+      if (existingAdmin) {
+        this.logger.warn(`Admin with email ${email} already exists`);
+        throw new ConflictException('Admin with this email already exists');
+      }
+  
+      const hashedPassword = await hashPassword(password);
+      const newAdmin = new this.adminModel({
+        email,
+        password: hashedPassword,
+        role: 'admin'
+      });
+      
+      const savedAdmin = await newAdmin.save();
+      this.logger.info('Admin created successfully', { adminId: savedAdmin._id });
 
+      return {
+        admin: {
+          entityId: savedAdmin._id,
+          email: savedAdmin.email,
+          deviceId: deviceId,
+          role: 'admin',
+        }
+      };
+    } catch (error) {
+      this.logger.error('Error in admin signup', { 
+        error: error.message, 
+        stack: error.stack 
+      });
+      throw error;
     }
   }
-  }
 
-
-  // async login(loginAdminDto: LoginAdminDto) {
-  //   const { email, password} = loginAdminDto;
-    
-  //   const admin = await this.adminModel.findOne({ email }) ;
-  //   if (!admin) {
-  //     throw new UnauthorizedException('Invalid credentials');
-  //   }
-    
-  //   const passwordMatch = await verifyPassword(password, admin.password);
-  //   if (!passwordMatch) {
-  //     throw new UnauthorizedException('Invalid credentials');
-  //   }
-    
-  //    console.log("qwerty")
-  //   // const userId = admin._id.toString();
-  //   const role = 'admin';
-  //   const deviceId ='android'
-  // //  const adminId = admin._id.toString();
-  //   const adminId = admin._id.toString();
-  //   const tokens = await this.grpcClientService.getToken(adminId, deviceId, role , email
-    
-  //   );
-  //    console.log(tokens)
-    
-  //   return {
-  //     admin: {
-  //       adminId: admin._id.toString(),
-  //       email: admin.email,
-  //       deviceId: deviceId,
-  //       role,
-      
-  //     },
-  //     tokens: 
-  //     {
-  //       accessToken: tokens.accessToken,
-  //       refreshToken: tokens.refreshToken
-  //     }
-  //     };
-    
-  // }
   async login(loginAdminDto: LoginAdminDto) {
+    this.logger.info('Admin login attempt', { email: loginAdminDto.email });
+    
     const { email, password } = loginAdminDto;
     
-    const admin = await this.adminModel.findOne({ email }) ;
-    if (!admin) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-    // console.log("email exist");
-    
-    const passwordMatch = await verifyPassword(password, admin.password);
-    if (!passwordMatch) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-    
-  //  console.log("password match");
-    const entityId = admin._id.toString();
-    const role = 'admin';
-    const deviceId ='android'
-    // console.log("entityId being generated",entityId);
-   
-    const tokens = await this.grpcClientService.getToken(entityId, deviceId, role , email
-      // // email: admin.email,
-      // deviceId: deviceId,
-      // role: 'admin',
-      // userId: uniqueUserId 
-    );
-    
-    return {
-      admin: {
-        // adminId: admin._id.toString(),
-        email: admin.email,
-        deviceId: deviceId,
-        role,
-        entityId : admin._id.toString()
-      
-      },
-      tokens: 
-      {
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken
+    try {
+      const admin = await this.adminModel.findOne({ email });
+      if (!admin) {
+        
+        this.logger.warn('Login failed - admin not found', { email });
+        throw new UnauthorizedException('Invalid credentials');
       }
-      };
+   
+      const passwordMatch = await verifyPassword(password, admin.password);
+      if (!passwordMatch) {
+      
+        this.logger.warn('Login failed - invalid password', { email });
+        throw new UnauthorizedException('Invalid credentials');
+      }
     
-    }
+      const entityId = admin._id.toString();
+      const role = 'admin';
+      const deviceId = 'android';
 
+      this.logger.debug('Requesting tokens from gRPC service', { entityId, role });
+      
+      const tokens = await this.grpcClientService.getToken(entityId, deviceId, role, email);
+
+      this.logger.info('Admin login successful', { email, entityId });
+
+      return {
+        admin: {
+          email: admin.email,
+          deviceId: deviceId,
+          role,
+          entityId: admin._id.toString()
+        },
+        tokens: {
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken
+        }
+      };
+    } catch (error) {
+      this.logger.error('Login error', { 
+        error: error.message, 
+        stack: error.stack 
+      });
+      throw error;
+    }
+  }
 
   async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
-    const { email } = forgotPasswordDto;
-  
-    const admin = await this.adminModel.findOne({ email });
-    if (!admin) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-  console.log("email exist");
-    const otp = generateOtp();
-    await this.redisService.setOtp(email, otp);
- console.log("otp is being generated ");
     try {
+      const { email } = forgotPasswordDto;
      
+      const admin = await this.adminModel.findOne({ email });
+      if (!admin) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      const otp = generateOtp();
+      await this.redisService.setOtp(email, otp);
+
       await sendOtp(email, otp);
-       console.log("email being called and generated");
-      return {message:"OTP sent to your email"};
-    } 
-    catch (error) {
-      throw new InternalServerErrorException('Failed to send OTP');
+
+      const resetToken = this.jwtService.sign(
+        { email },
+        { expiresIn: '15m' } 
+      );
+     
+      return { message: "OTP sent to your email" ,resetToken};
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to process forgot password request');
     }
-  
   }
- 
+
+
   async resetPassword(resetPasswordDto: ResetPasswordDto) {
-    const { email, otp, newPassword } = resetPasswordDto;
-
-  console.log('ResetPassword DTO:', { email, otp, newPassword }); 
-  
-    const storedOtp = await this.redisService.getOtp(email);
-    if (!storedOtp) {
-      throw new UnauthorizedException('OTP expired or invalid');
-      
-    }
-    console.log("otp is being checked");
-    if (storedOtp !== otp) {
-      throw new UnauthorizedException('Invalid OTP');
-   
-    }
-       console.log("invalid otp");
-  
-    const hashedPassword = await hashPassword(newPassword);
-    console.log("password is being hashed");
-    const updatedAdmin = await this.adminModel.findOneAndUpdate(
-      { email },
-      { password: hashedPassword },
-      { new: true },
-    );
-    console.log(
-      "password is being updated",
-      updatedAdmin
-    );
+    try {
+      const { otp, newPassword } = resetPasswordDto;
+      const token =resetPasswordDto.token
     
-    if (!updatedAdmin) {
-      
-      throw new UnauthorizedException('Admin not found');
-    }
-    
-    await this.redisService.deleteOtp(email);
-    return { message: 'Password successfully reset' };
-  }
-
+      let decoded: { email: string };
  
+      try {
+        decoded = this.jwtService.verify(token);
+      } catch (err) {
+        throw new UnauthorizedException('Invalid or expired token');
+      }
+
+      const email = decoded.email;
+
+      if (!email) {
+        throw new UnauthorizedException('Invalid or expired OTP');
+      }
+
+      const storedOtp = await this.redisService.getOtp(email);
+    
+      if (!storedOtp) {
+        throw new UnauthorizedException('OTP expired or invalid');
+      }
+
+      if (storedOtp !== otp) {
+        throw new UnauthorizedException('Invalid OTP');
+      }
+
+      const hashedPassword = await hashPassword(newPassword);
+      const updatedAdmin = await this.adminModel.findOneAndUpdate(
+        { email },
+        { password: hashedPassword },
+        { new: true },
+      );
+
+      if (!updatedAdmin) {
+        throw new UnauthorizedException('Admin not found');
+      }
+
+      await this.redisService.deleteOtp(email);
+      return { message: 'Password successfully reset' };
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to reset password');
+    }
+  }
+
   async changePassword(admin: AdminDocument, changePasswordDto: ChangePasswordDto) {
-    const { currentPassword, newPassword } = changePasswordDto;
-  
+    this.logger.info('Change password request', { adminId: admin._id });
+
+    try {
+      const { currentPassword, newPassword } = changePasswordDto;
     
-    const passwordMatch = await verifyPassword(currentPassword, admin.password);
-    if (!passwordMatch) throw new UnauthorizedException('Current password is incorrect');
-  
+      const passwordMatch = await verifyPassword(currentPassword, admin.password);
+      if (!passwordMatch) {
+        this.logger.warn('Change password failed - current password incorrect', { adminId: admin._id });
+        throw new UnauthorizedException('Current password is incorrect');
+      }
     
-    const hashedPassword = await hashPassword(newPassword);
-    admin.password = hashedPassword;
-    await admin.save();
-  
+      const hashedPassword = await hashPassword(newPassword);
+      admin.password = hashedPassword;
+      await admin.save();
+      this.logger.info('Password changed successfully', { adminId: admin._id });
     
-    return { message: 'Password changed successfully' };
+      return { message: 'Password changed successfully' };
+    } catch (error) {
+      this.logger.error('Change password failed', {
+        adminId: admin._id,
+        error: error.message,
+        stack: error.stack
+      });
+      throw error;
+    }
   }
 
-  
+  async logout(accessToken: string) {
+    this.logger.info('Logout request received');
 
-//   async logout(LogoutDto: LogoutDto) {
-//   const { accessToken } = LogoutDto;
-//   console.log("being called");
-//   const result = await this.grpcClientService.logout({accessToken});
-
-//   return { 
-//     success: result.success,
-//     message: result.success ? 'Logged out successfully' : 'Logout failed'
-//   };
-// }
-
-async logout(accessToken: string) {
-    console.log("Logout service being called");
-    
-    const result = await this.grpcClientService.logout({ accessToken });
-    
-    return {
-      success: result.success,
-      message: result.success 
-        ? 'Logged out successfully' 
-        : 'Logout failed'
-    };
+    try {
+      const result = await this.grpcClientService.logout({ accessToken });
+      this.logger.info('Logout successful');
+      
+      return {
+        success: result.success,
+        message: result.success 
+          ? 'Logged out successfully' 
+          : 'Logout failed'
+      };
+    } catch (error) {
+      this.logger.error('Logout failed', {
+        error: error.message,
+        stack: error.stack
+      });
+      throw error;
+    }
   }
 
-  async refreshToken(RefreshTokenDto: RefreshTokenDto) {
-    const { refreshToken } = RefreshTokenDto;
-    const result = await this.grpcClientService.accessToken({
-      refreshToken,
-    });
-    
-    return {
-      accessToken: result.accessToken
-    };
+  async refreshToken(refreshTokenDto: RefreshTokenDto) {
+    this.logger.info('Refresh token request received');
+
+    try {
+      const { refreshToken } = refreshTokenDto;
+      const result = await this.grpcClientService.accessToken({ refreshToken });
+      this.logger.info('Token refreshed successfully');
+      
+      return {
+        accessToken: result.accessToken
+      };
+    } catch (error) {
+      this.logger.error('Token refresh failed', {
+        error: error.message,
+        stack: error.stack
+      });
+      throw new InternalServerErrorException('Failed to refresh token');
+    }
   }
 
   async validateToken(accessToken: string) {
-    const result = await this.grpcClientService.validateToken({
-      accessToken
-    });
-    
-    return {
-      isValid: result.isValid,
-      admin : result.entityId,
-    };
+    this.logger.debug('Token validation request received');
+
+    try {
+      const result = await this.grpcClientService.validateToken({ accessToken });
+      this.logger.debug('Token validation completed', { isValid: result.isValid });
+      
+      return {
+        isValid: result.isValid,
+        admin: result.entityId,
+      };
+    } catch (error) {
+      this.logger.error('Token validation failed', {
+        error: error.message,
+        stack: error.stack
+      });
+      if (error.name === 'BadRequestException') {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to validate token');
+    }
   }
 }
 
-
-  // async uploadProfilePic(uploadProfileDto: UploadProfileDto, file: Express.Multer.File) {
-  //   const { adminid } = uploadProfileDto;
-
- 
-  //   const admin = await this.adminModel.findById(adminid);
-  //   if (!admin) {
-  //     throw new Error('Admin not found');
-  //   }
-
-  //   const s3 = new AWS.S3();
-  //   // const fileExtension = path.extname(file.originalname);
-  //   const uploadParams = {
-  //     Bucket: 'your-s3-bucket-name', 
-  //     Key: `${adminid}/${file.originalname}`,
-  //     Body: file.buffer,
-  //     ContentType: file.mimetype,
-  //   };
-
-  //   const s3Response = await s3.upload(uploadParams).promise();
-
-  //   admin.profilePicture = s3Response.Location;
-  //   await admin.save();
-
-  //   return { message: 'Profile picture uploaded successfully', profilePicture: s3Response.Location };
-  // }

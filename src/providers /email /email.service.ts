@@ -11,16 +11,13 @@ import { generateOtp } from '../../utils/otp-generator';
       port: parseInt(process.env.SMTP_PORT|| '587'),
       secure: false,
       auth: {
-        user: process.env.SMTP_USER||'',
-        pass: process.env.SMTP_PASS||'',
+        user: process.env.SMTP_USER||'mahi.rajput@appinventiv.com',
+        pass: process.env.SMTP_PASS||'acea sbch ojje ennw',
       },
-
-
-
 
     });
 
-      console.log("email is being initiated");
+      
     await transporter.sendMail({
        
       from: process.env.SMTP_USER || 'mahi.rajput@appinventiv.com', 
@@ -29,7 +26,7 @@ import { generateOtp } from '../../utils/otp-generator';
       text: `Your OTP code is ${generateOtp}. It is valid for 10 minutes.`,
 
     });
-      console.log("email is beingsent ");
+    
    
   }
  

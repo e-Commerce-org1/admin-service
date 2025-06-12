@@ -24,10 +24,11 @@ import { InventoryUpdateAdminDto } from './dto/inventoryupdate.dto';
  import { AuthGuard } from '../../guards/auth.guard';
 
   @Controller('admin/products')
+  @UseGuards(AuthGuard)
  @UseGuards(RolesGuard, PermissionsGuard)
   export class ProductController {
 	constructor(private readonly productService: ProductService) {}
-   @UseGuards(AuthGuard)
+
 	@Post("create")
 	@Roles(AdminRoles.Super_Admin, AdminRoles.Product_Admin)
 	 @Permissions(permissions.PRODUCT_CREATE)
@@ -36,7 +37,7 @@ import { InventoryUpdateAdminDto } from './dto/inventoryupdate.dto';
 	}
 
 
-     @UseGuards(AuthGuard)
+    
 	@Patch(':id')
 	@Roles(AdminRoles.Super_Admin, AdminRoles.Product_Admin)
 	@Permissions(permissions.PRODUCT_UPDATE)
@@ -47,22 +48,30 @@ import { InventoryUpdateAdminDto } from './dto/inventoryupdate.dto';
   ) {
     return this.productService.updateProduct(id, dto);
   }
-  @UseGuards(AuthGuard)
+
+
+ 
 	@Get(':id')
 	 @Roles(AdminRoles.Super_Admin, AdminRoles.Product_Admin)
-	 @Permissions(permissions.PRODUCT_READ)
+  @Permissions(permissions.PRODUCT_READ)
 	 async findOne(@Param('id') id: string) {
 	  return await this.productService.getProduct(id);
 	}
-     @UseGuards(AuthGuard)
+
+
+
+      
 	@Get()
-	@Roles(AdminRoles.Super_Admin, AdminRoles.Product_Admin)
-	@Permissions(permissions.PRODUCT_READ)
+	 @Roles(AdminRoles.Super_Admin, AdminRoles.Product_Admin)
+	 @Permissions(permissions.PRODUCT_READ)
 	
 	  async findAll(@Query() filter: ProductFilterDto) {
     return this.productService.listProducts(filter);
   }
-    @UseGuards(AuthGuard)
+
+
+
+    
   @Delete(':id')
   @Roles(AdminRoles.Super_Admin, AdminRoles.Product_Admin)
   @Permissions(permissions.PRODUCT_DELETE)
