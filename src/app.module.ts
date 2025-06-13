@@ -10,6 +10,7 @@ import { ProductGrpcClientModule } from './grpc/productgrpc/productgrpc.module';
 import { UserModule } from './modules/users/user.module';
 import { getWinstonConfig } from './config/logger.config';
 import { WinstonModule } from 'nest-winston';
+import { CloudinaryModule } from './providers /cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { WinstonModule } from 'nest-winston';
       isGlobal: true,
       envFilePath: ['.env']
     }),
+    CloudinaryModule,
     MongooseModule.forRoot(process.env.MONGO_URI as string),
     AdminModule , ProductModule,UserModule,
     WinstonModule.forRoot(getWinstonConfig('App')),

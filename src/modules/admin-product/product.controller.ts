@@ -8,7 +8,9 @@ import {
 	Post,
 	Put,
 	Query,
+	UploadedFile,
 	UseGuards,
+	UseInterceptors,
   } from '@nestjs/common';
   import { ProductService } from './product.service';
   import { CreateProductDto } from './dto/create-product.dto';
@@ -22,7 +24,7 @@ import {
 import { ProductFilterDto } from './dto/product.filter.dto';
 import { InventoryUpdateAdminDto } from './dto/inventoryupdate.dto';
  import { AuthGuard } from '../../guards/auth.guard';
-
+import { FileInterceptor } from '@nestjs/platform-express';
   @Controller('admin/products')
   @UseGuards(AuthGuard)
  @UseGuards(RolesGuard, PermissionsGuard)
@@ -30,10 +32,12 @@ import { InventoryUpdateAdminDto } from './dto/inventoryupdate.dto';
 	constructor(private readonly productService: ProductService) {}
 
 	@Post("create")
-	@Roles(AdminRoles.Super_Admin, AdminRoles.Product_Admin)
-	 @Permissions(permissions.PRODUCT_CREATE)
-	async create(@Body() dto: CreateProductDto) {
-	  return await this.productService.createProduct(dto);
+	// @Roles(AdminRoles.Super_Admin, AdminRoles.Product_Admin)
+	//  @Permissions(permissions.PRODUCT_CREATE)
+
+   @UseInterceptors(FileInterceptor('image'))
+	async create(@Body() dto: CreateProductDto, @UploadedFile() file: Express.Multer.File,) {
+	  return await this.productService.createProduct(dto,file);
 	}
 
 

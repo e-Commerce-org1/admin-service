@@ -8,11 +8,19 @@ import { ProductGrpcClientModule } from '../../grpc/productgrpc/productgrpc.modu
 import { AuthGrpcClientModule } from 'src/grpc/authgrpc/auth.module';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { AdminModule } from '../admin-auth/admin.module';
+import { CloudinaryModule } from 'src/providers /cloudinary/cloudinary.module';
+import { MulterModule } from '@nestjs/platform-express';
 
 @Module({
   imports: [
+    MulterModule.register({
+      dest: './uploads',
+    }),
+    CloudinaryModule,
   ProductGrpcClientModule,AuthGrpcClientModule,AdminModule
   ],
+
+  
   controllers: [ProductController],
   providers: [
     ProductService,ProductGrpcClientModule

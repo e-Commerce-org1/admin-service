@@ -15,6 +15,7 @@ import { UpdateProductDto } from './dto/updateproduct.dto';
 
   import { Logger } from 'winston';
 import { ProductServiceGrpc } from '../../interfaces/productinterface';
+import { CloudinaryService } from 'src/providers /cloudinary/cloudinary.service';
 
 
   
@@ -26,19 +27,20 @@ import { ProductServiceGrpc } from '../../interfaces/productinterface';
   
 	constructor(
 	  @Inject('PRODUCT_PACKAGE') private client: ClientGrpc,
+    private readonly cloudinaryService: CloudinaryService,
     // @Inject('AUTH_PACKAGE') private readonly clientAuth: ClientGrpc
 	//   @InjectLogger(ProductService.name) private readonly logger: Logger
 	) {}
   
 	onModuleInit() {
 	  this.productService = this.client.getService<ProductServiceGrpc>('ProductService');
-	}
+	} 
   
 
   
-	async createProduct(dto: CreateProductDto): Promise<Response> {
+	async createProduct(dto: CreateProductDto,file: Express.Multer.File): Promise<Response> {
   try {
-    
+    const imageUrl = await this.cloudinaryService.uploadImage(file);
     const totalStock = dto.variants.reduce((sum, variant) => sum + variant.stock, 0);
 
     const payload: CreateProductRequest = {
@@ -47,7 +49,7 @@ import { ProductServiceGrpc } from '../../interfaces/productinterface';
       subCategory: dto.subCategory || undefined,
       gender: dto.gender || undefined, 
       brand: dto.brand,
-      imageUrl: dto.imageUrl,
+      imageUrl: imageUrl,
       description: dto.description,
       price: dto.price,
       totalStock: totalStock,
