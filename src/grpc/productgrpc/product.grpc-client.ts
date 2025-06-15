@@ -24,27 +24,4 @@ export class GrpcProductService implements OnModuleInit {
     this.productService = this.client.getService<ProductServiceGrpc>('ProductService');
   }
 
-//   async createProduct(payload: CreateProductRequest): Promise<Response> {
-//     return lastValueFrom(this.productService.CreateProduct(payload));
-//   }
-
-  // async updateProduct(payload: UpdateProductRequest): Promise<Response> {
-  //   return lastValueFrom(this.productService.UpdateProduct(payload));
-  // }
-
-//   async getProduct(payload: ProductID): Promise<Response> {
-//     return lastValueFrom(this.productService.GetProduct(payload));
-//   }
-
-//   async deleteProduct(payload: ProductID): Promise<Response> {
-//     return lastValueFrom(this.productService.DeleteProduct(payload));
-//   }
-
-//   async listProducts(payload: ProductFilter): Promise<Response> {
-//     return lastValueFrom(this.productService.ListProducts(payload));
-//   }
-
-//   async updateInventory(payload: UpdateInventoryRequest): Promise<Response> {
-//     return lastValueFrom(this.productService.UpdateInventory(payload));
-//   }
 }
