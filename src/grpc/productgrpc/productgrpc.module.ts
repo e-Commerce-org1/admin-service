@@ -20,7 +20,7 @@ import { GrpcProductService } from './product.grpc-client';
   ])
   ],
   providers :[GrpcProductService],
-  exports: [ClientsModule],
+  exports: [ClientsModule,GrpcProductService],
 })
 export class ProductGrpcClientModule {}
 

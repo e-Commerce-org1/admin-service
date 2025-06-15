@@ -1,4 +1,5 @@
 
+
 import { 
   Controller, 
   Post, 
@@ -21,6 +22,7 @@ import {
   ApiBody, 
   ApiOperation, 
   ApiResponse, 
+  ApiTags, 
   ApiUnauthorizedResponse 
 } from '@nestjs/swagger';
 import { LoginResponses } from '../../interfaces/auth.interface';
@@ -28,12 +30,12 @@ import { ChangePasswordDto } from './dto/changepassword.dto';
 import { AdminDocument } from '../../schema/admin.schema';
 import { CurrentUser } from 'src/decorator/current-admin.decorator';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
-import { ValidateTokenDto } from './dto/validate-token.dto';
 import { AuthGuard } from '../../guards/auth.guard';
 import { LoggerModule } from '../../utils/logger/logger.module';
 import * as winston from 'winston';
 import { InjectLogger } from 'src/utils/logger/logger.provider';
 
+@ApiTags('Admin')
 @Controller('admin')
 export class AdminController {
   constructor(
@@ -42,17 +44,51 @@ export class AdminController {
   ) {}
 
   @Post('signup')
-  @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Admin signup' })
-  @ApiResponse({
-    status: HttpStatus.CREATED,
-    description: 'Admin registered successfully',
-  })
-  @ApiResponse({ 
-    status: HttpStatus.CONFLICT, 
-    description: 'Admin already exists or email is taken' 
-  })
-  @ApiBody({ type: SignupAdminDto })
+@HttpCode(HttpStatus.CREATED)
+@ApiOperation({ 
+  summary: 'Register a new admin',
+  description: 'Creates a new admin account with the provided details.'
+})
+@ApiBody({ 
+  type: SignupAdminDto,
+  description: 'Admin signup data including email, password, and device ID.',
+  examples: {
+    example1: {
+      summary: 'Admin Signup Example',
+      value: {
+        email: 'admin@example.com',
+        password: 'password123',
+        deviceId: 'device-12345'
+      }
+    }
+  }
+})
+@ApiResponse({
+  status: HttpStatus.CREATED,
+  description: 'Admin registered successfully.',
+  schema: {
+    example: {
+      success: true,
+      message: 'Admin registered successfully',
+      data: {
+        id: '12345',
+        email: 'admin@example.com',
+        createdAt: '2025-06-13T15:24:00.000Z'
+      }
+    }
+  }
+})
+@ApiResponse({ 
+  status: HttpStatus.CONFLICT, 
+  description: 'Admin already exists or email is taken.',
+  schema: {
+    example: {
+      statusCode: 409,
+      message: 'Admin with this email already exists',
+      error: 'Conflict'
+    }
+  }
+})
   async signup(@Body() signupAdminDto: SignupAdminDto) {
     this.logger.info('Received admin signup request');
     
@@ -75,18 +111,52 @@ export class AdminController {
     }
   }
 
-  @Post('login')
+ @Post('login')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Admin login' })
-  @ApiBody({ type: LoginAdminDto })
+  @ApiOperation({ 
+    summary: 'Admin login',
+    description: 'Authenticates an admin user and returns access and refresh tokens.'
+  })
+  @ApiBody({ 
+    type: LoginAdminDto,
+    description: 'Admin login credentials including email and password.',
+    schema: {
+      example: {
+        email: 'admin@example.com',
+        password: 'securePassword123',
+        deviceId: 'device-12345'
+      }
+    }
+  })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Admin logged in successfully',
-    type: LoginResponses
+    description: 'Admin logged in successfully.',
+    type: LoginResponses,
+    schema: {
+      example: {
+        success: true,
+        message: 'Admin logged in successfully',
+        data: {
+          accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+          refreshToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+          admin: {
+            id: '12345',
+            email: 'admin@example.com',
+            role: 'admin'
+          }
+        }
+      }
+    }
   })
-  @ApiResponse({ 
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Invalid credentials' 
+  @ApiUnauthorizedResponse({ 
+    description: 'Invalid credentials provided.',
+    schema: {
+      example: {
+        statusCode: 401,
+        message: 'Invalid email or password',
+        error: 'Unauthorized'
+      }
+    }
   })
   async login(@Body() loginAdminDto: LoginAdminDto): Promise<LoginResponses> {
     this.logger.info('Received admin login request', { email: loginAdminDto.email });
@@ -106,15 +176,24 @@ export class AdminController {
 
   @UseGuards(AuthGuard)
   @Post('change-password')
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Admin change password' })
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ 
+    summary: 'Change admin password',
+    description: 'Allows an authenticated admin to change their password.'
+  })
   @ApiBody({ 
     type: ChangePasswordDto,
-    description: 'Current password and new password' 
+    description: 'Current and new password for the admin account.',
+    schema: {
+      example: {
+        currentPassword: 'oldPassword123',
+        newPassword: 'newSecurePassword456'
+      }
+    }
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Password changed successfully',
+    description: 'Password changed successfully.',
     schema: {
       example: {
         success: true,
@@ -123,9 +202,8 @@ export class AdminController {
       }
     }
   })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized - Invalid credentials or not logged in',
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized - Invalid credentials or not logged in.',
     schema: {
       example: {
         statusCode: 401,
@@ -160,13 +238,22 @@ export class AdminController {
 
   @Post('forgot-password')
   @ApiOperation({ 
-    summary: 'Admin forgot password',
-    description: 'Send reset password OTP to admin email'
+    summary: 'Request password reset',
+    description: 'Sends a one-time password (OTP) to the admin’s email for password reset.'
   })
-  @ApiBody({ type: ForgotPasswordDto })
+  @ApiBody({ 
+    type: ForgotPasswordDto,
+    description: 'Email address to receive the password reset OTP.'
+  })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'If this email exists, OTP has been sent'
+    description: 'If the email exists, an OTP has been sent.',
+    schema: {
+      example: {
+        success: true,
+        message: 'If this email exists, OTP has been sent'
+      }
+    }
   })
   async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
     this.logger.info('Forgot password request', { email: forgotPasswordDto.email });
@@ -186,20 +273,32 @@ export class AdminController {
 
   @Post('reset-password')
   @ApiOperation({ 
-    summary: 'Reset password with OTP',
-    description: 'Verify OTP and set new password'
+    summary: 'Reset admin password',
+    description: 'Verifies the OTP and sets a new password for the admin account.'
   })
-  @ApiBody({ type: ResetPasswordDto })
-  @ApiResponse({ 
+  @ApiBody({ 
+    type: ResetPasswordDto,
+    description: 'OTP and new password for resetting the admin account password.'
+  })
+  @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Password reset successful',
+    description: 'Password reset successful.',
     schema: {
-      example: { message: 'Password successfully reset' }
+      example: {
+        success: true,
+        message: 'Password successfully reset'
+      }
     }
   })
-  @ApiResponse({ 
-    status: 401, 
-    description: 'Invalid OTP or expired' 
+  @ApiUnauthorizedResponse({ 
+    description: 'Invalid or expired OTP.',
+    schema: {
+      example: {
+        statusCode: 401,
+        message: 'Invalid OTP or expired',
+        error: 'Unauthorized'
+      }
+    }
   })
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     this.logger.info('Reset password request');
@@ -210,7 +309,6 @@ export class AdminController {
       return result;
     } catch (error) {
       this.logger.error('Password reset failed', {
-      
         error: error.message
       });
       throw error;
@@ -219,16 +317,23 @@ export class AdminController {
 
   @UseGuards(AuthGuard)
   @Post('logout')
+  @ApiBearerAuth()
   @ApiOperation({ 
-    summary: 'Log out admin user', 
-    description: 'Invalidates the current session for the specified device' 
+    summary: 'Log out admin',
+    description: 'Invalidates the current session for the specified device by revoking the access token.'
   })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'Successful logout',
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Successful logout.',
+    schema: {
+      example: {
+        success: true,
+        message: 'Logged out successfully'
+      }
+    }
   })
   @ApiUnauthorizedResponse({ 
-    description: 'Unauthorized - Invalid token or missing required fields',
+    description: 'Unauthorized - Invalid token or missing authorization header.',
     schema: {
       example: {
         statusCode: 401,
@@ -264,20 +369,49 @@ export class AdminController {
   }
 
   @Post('refresh-token')
-  @ApiOperation({ summary: 'Refresh an access token using a refresh token' })
+  @ApiOperation({ 
+    summary: 'Refresh access token',
+    description: 'Generates a new access token using a valid refresh token.'
+  })
   @ApiBody({
-    description: 'Refresh token data',
+    type: RefreshTokenDto,
+    description: 'Refresh token to obtain a new access token.',
     schema: {
       type: 'object',
       properties: {
         refreshToken: {
           type: 'string',
-          description: 'The refresh token used to obtain a new access token',
-          example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-        },
+          description: 'The refresh token used to obtain a new access token.',
+          example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+        }
       },
-      required: ['refreshToken'],
-    },
+      required: ['refreshToken']
+    }
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Token refreshed successfully.',
+    schema: {
+      example: {
+        success: true,
+        message: 'Token refreshed successfully',
+        data: {
+          accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+          refreshToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+        }
+      }
+    }
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Failed to refresh token.',
+    schema: {
+      example: {
+        statusCode: 500,
+        message: 'Failed to refresh token',
+        error: 'Internal Server Error'
+      }
+    }
   })
   async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
     this.logger.info('Refresh token request received');
@@ -299,6 +433,4 @@ export class AdminController {
       throw new InternalServerErrorException('Failed to refresh token');
     }
   }
-
-
 }

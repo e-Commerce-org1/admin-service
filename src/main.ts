@@ -33,8 +33,10 @@ async function bootstrap() {
       persistAuthorization: true,
     },
   });
-
+const port = process.env.PORT ?? 3002;
+  await app.listen(port);
+  console.log(`Swagger documentation is running at http://localhost:${port}/api-docs`);
   
-  await app.listen(process.env.PORT ?? 3002);
+  // await app.listen(process.env.PORT ?? 3002);
 }
 bootstrap();

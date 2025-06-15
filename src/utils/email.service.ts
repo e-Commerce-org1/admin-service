@@ -15,9 +15,6 @@ import { generateOtp } from './otp-generator';
         pass: process.env.SMTP_PASS||'',
       },
 
-
-
-
     });
 
     

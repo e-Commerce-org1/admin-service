@@ -9,6 +9,14 @@ export class VariantStockUpdateDto {
   @IsNumber()
   @Min(0)
   stock: number;
+  
+  @IsString()
+  @IsOptional()
+  size?: string;
+
+  @IsString()
+  @IsOptional()
+  color?: string;
 }
 
 export class InventoryUpdateAdminDto {

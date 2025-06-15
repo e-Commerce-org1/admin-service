@@ -82,7 +82,7 @@ export class AdminService {
   async login(loginAdminDto: LoginAdminDto) {
     this.logger.info('Admin login attempt', { email: loginAdminDto.email });
     
-    const { email, password } = loginAdminDto;
+    const { email, password ,deviceId} = loginAdminDto;
     
     try {
       const admin = await this.adminModel.findOne({ email });
@@ -101,7 +101,8 @@ export class AdminService {
     
       const entityId = admin._id.toString();
       const role = 'admin';
-      const deviceId = 'android';
+      // const deviceId = 'android';
+
 
       this.logger.debug('Requesting tokens from gRPC service', { entityId, role });
       

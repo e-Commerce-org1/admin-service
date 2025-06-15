@@ -1,4 +1,4 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, InternalServerErrorException, OnModuleInit } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import { from, lastValueFrom, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -30,9 +30,8 @@ export class UserAdminGrpcService implements OnModuleInit, IUserAdminGrpcService
         from(this.userAdminGrpcClient.getAllUsers(data)).pipe(map(response => response))
       );
     } 
-    catch (error) {
-      console.error('Error in getAllUsers', error);
-      throw error;
+   catch {
+      throw new InternalServerErrorException('Unable to fetch all users');
     }
   }
 
@@ -43,11 +42,11 @@ export class UserAdminGrpcService implements OnModuleInit, IUserAdminGrpcService
         from(this.userAdminGrpcClient.getUserById(data)).pipe(map(response => response))
       );
     } 
-    catch (error) {
-      console.error('Error in getUserById', error);
-      throw error;
+    catch {
+      throw new InternalServerErrorException('Unable to fetch user by ID');
     }
   }
+
 
 
   async updateUserStatus(data: UpdateUserStatusRequest): Promise<UpdateUserStatusResponse> {
@@ -56,12 +55,10 @@ export class UserAdminGrpcService implements OnModuleInit, IUserAdminGrpcService
         from(this.userAdminGrpcClient.updateUserStatus(data)).pipe(map(response => response))
       );
     } 
-    catch (error) {
-      console.error('Error in updateUserStatus', error);
-      throw error;
+   catch {
+      throw new InternalServerErrorException('Unable to update user status');
     }
   }
-
 
   async searchUsers(data: SearchUsersRequest): Promise<SearchUsersResponse> {
     try {
@@ -69,9 +66,8 @@ export class UserAdminGrpcService implements OnModuleInit, IUserAdminGrpcService
         from(this.userAdminGrpcClient.searchUsers(data)).pipe(map(response => response))
       );
     } 
-    catch (error) {
-      console.error('Error in searchUsers', error);
-      throw error;
+    catch {
+      throw new InternalServerErrorException('Unable to search users');
     }
   }
 
@@ -84,9 +80,8 @@ export class UserAdminGrpcService implements OnModuleInit, IUserAdminGrpcService
       )
     );
     } 
-    catch (error) {
-      console.error('Error in unblock', error);
-      throw error;
+    catch {
+      throw new InternalServerErrorException('Unable to unblock user');
     }
   }
 }

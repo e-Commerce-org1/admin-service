@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { join } from 'path';
 //import { useradmin } from '../user.proto';
-import { UserAdminGrpcService } from '../../modules/users/grpc.service';
+import { UserAdminGrpcService } from './grpc.service';
 
 
 @Module({

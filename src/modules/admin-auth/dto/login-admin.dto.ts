@@ -11,9 +11,9 @@ export class LoginAdminDto {
   @IsString()
   password: string;
 
-  // @IsNotEmpty()
-  // @IsString()
-  // deviceId: string;
+  @IsNotEmpty()
+  @IsString()
+  deviceId: string;
 
    @IsNotEmpty()
    @IsString()
